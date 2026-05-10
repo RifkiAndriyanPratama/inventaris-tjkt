@@ -1,21 +1,19 @@
 <?php
-
 session_start();
-require_once __DIR__.'/../../config/connection.php';
-require_once __DIR__.'/../../src/actions.php';
-require_once __DIR__.'/../../src/core.php';
-require_once __DIR__.'/../../src/auth.php';
+require_once __DIR__ . '/../../src/classes/Peminjaman.php';
+require_once __DIR__ . '/../../src/classes/Auth.php';
 
-require_user();
+$auth = new Auth();
+$auth->requireUser();
 
-$pdo = get_db();
+$peminjamanModel = new Peminjaman();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_barang = $_POST['id_barang'];
-    $jumlah = $_POST['jumlah'];
-    $id_user = $_SESSION['user']['id'];
+    $id_barang = (int) $_POST['id_barang'];
+    $jumlah = (int) $_POST['jumlah'];
+    $id_user = (int) $_SESSION['user']['id'];
 
-    $result = save_peminjaman($pdo, $id_user, $id_barang, $jumlah);
+    $result = $peminjamanModel->save($id_user, $id_barang, $jumlah);
 
     $_SESSION['notification'] = [
         'type' => $result['success'] ? 'success' : 'error',
@@ -25,3 +23,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Location: /user/dashboard.php');
     exit();
 }
+?>

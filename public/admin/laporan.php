@@ -1,37 +1,33 @@
 <?php
-
 session_start();
-require_once __DIR__.'/../../config/connection.php';
-require_once __DIR__.'/../../src/actions.php';
-require_once __DIR__.'/../../src/core.php';
-require_once __DIR__.'/../../src/auth.php';
+require_once __DIR__ . '/../../src/classes/Peminjaman.php';
+require_once __DIR__ . '/../../src/classes/Auth.php';
 
-require_admin();
+$auth = new Auth();
+$auth->requireAdmin();
 
-$pdo = get_db();
+$peminjamanModel = new Peminjaman();
 
 // Filter berdasarkan bulan (format: YYYY-MM)
 $filter_bulan = $_GET['bulan'] ?? date('Y-m');
 
 // Ambil data peminjaman
-$peminjaman = get_all_peminjaman($pdo);
+$allPeminjaman = $peminjamanModel->getAll();
 
 // Filter berdasarkan bulan
-if (! empty($filter_bulan)) {
-    $peminjaman = array_filter($peminjaman, function ($item) use ($filter_bulan) {
-        return substr($item['tanggal_pinjam'], 0, 7) === $filter_bulan;
-    });
-}
+$peminjaman = array_filter($allPeminjaman, function ($item) use ($filter_bulan) {
+    return substr($item['tanggal_pinjam'], 0, 7) === $filter_bulan;
+});
 
 // Statistik
 $totalPeminjaman = count($peminjaman);
 $totalBarangDipinjam = array_sum(array_column($peminjaman, 'jumlah'));
 
 // Statistik per status
-$pending = count(array_filter($peminjaman, fn ($item) => $item['status_pinjam'] === 'pending'));
-$dipinjam = count(array_filter($peminjaman, fn ($item) => $item['status_pinjam'] === 'dipinjam'));
-$dikembalikan = count(array_filter($peminjaman, fn ($item) => $item['status_pinjam'] === 'dikembalikan'));
-$ditolak = count(array_filter($peminjaman, fn ($item) => $item['status_pinjam'] === 'ditolak'));
+$pending = count(array_filter($peminjaman, fn($item) => $item['status_pinjam'] === 'pending'));
+$dipinjam = count(array_filter($peminjaman, fn($item) => $item['status_pinjam'] === 'dipinjam'));
+$dikembalikan = count(array_filter($peminjaman, fn($item) => $item['status_pinjam'] === 'dikembalikan'));
+$ditolak = count(array_filter($peminjaman, fn($item) => $item['status_pinjam'] === 'ditolak'));
 
 // Barang terpopuler
 $barangPopuler = [];
@@ -51,18 +47,19 @@ foreach ($peminjaman as $p) {
 arsort($peminjamAktif);
 $topPeminjam = key($peminjamAktif) ?? '-';
 
-// Daftar bulan untuk dropdown
+// Daftar bulan untuk dropdown (tahun 2024 sampai tahun ini)
 $months = [];
-for ($i = 1; $i <= 12; $i++) {
-    $months[] = date('Y-m', strtotime("2024-$i-01"));
-}
-// Tambah tahun ini juga
+$startYear = 2024;
 $currentYear = date('Y');
-for ($i = 1; $i <= 12; $i++) {
-    $months[] = date('Y-m', strtotime("$currentYear-$i-01"));
+
+for ($year = $startYear; $year <= $currentYear; $year++) {
+    for ($i = 1; $i <= 12; $i++) {
+        $months[] = date('Y-m', strtotime("$year-$i-01"));
+    }
 }
 $months = array_unique($months);
 sort($months);
 
-$content = __DIR__.'/../../views/admin/laporan.php';
-require __DIR__.'/../../views/layouts/main.php';
+$content = __DIR__ . '/../../views/admin/laporan.php';
+require __DIR__ . '/../../views/layouts/main.php';
+?>

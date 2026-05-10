@@ -1,16 +1,12 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/connection.php';
-require_once __DIR__ . '/../../src/actions.php';
-require_once __DIR__ . '/../../src/core.php';
-require_once __DIR__ . '/../../src/auth.php';
+require_once __DIR__ . '/../../src/classes/Barang.php';
+require_once __DIR__ . '/../../src/classes/Auth.php';
 
-if (!is_logged_in() || !is_admin()) {
-    header('Location: /login.php');
-    exit();
-}
+$auth = new Auth();
+$auth->requireAdmin();
 
-$pdo = get_db();
+$barangModel = new Barang();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -18,48 +14,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($action === 'tambah') {
         $nama_barang = $_POST['nama_barang'];
-        $stok = $_POST['stok'];
+        $stok = (int) $_POST['stok'];
         $status = $_POST['status'];
         
-        if (save_barang($pdo, $nama_barang, $stok, $status)) {
-            $_SESSION['notification'] = [
-                'type' => 'success',
-                'message' => 'Barang "' . htmlspecialchars($nama_barang) . '" berhasil ditambahkan!'
-            ];
-        } else {
-            $_SESSION['notification'] = [
-                'type' => 'error',
-                'message' => 'Gagal menambahkan barang. Silakan coba lagi.'
-            ];
-        }
+        $result = $barangModel->save($nama_barang, $stok, $status);
+        
+        $_SESSION['notification'] = [
+            'type' => $result['success'] ? 'success' : 'error',
+            'message' => $result['message']
+        ];
         header('Location: /admin/barang.php');
         exit();
 
     } elseif ($action === 'edit') {
-        $id = $_POST['id'];
+        $id = (int) $_POST['id'];
         $nama_barang = $_POST['nama_barang'];
-        $stok = $_POST['stok'];
+        $stok = (int) $_POST['stok'];
         $status = $_POST['status'];
         
-        if (update_barang($pdo, $id, $nama_barang, $stok, $status)) {
-            $_SESSION['notification'] = [
-                'type' => 'success',
-                'message' => 'Barang "' . htmlspecialchars($nama_barang) . '" berhasil diperbarui!'
-            ];
-        } else {
-            $_SESSION['notification'] = [
-                'type' => 'error',
-                'message' => 'Gagal memperbarui barang. Silakan coba lagi.'
-            ];
-        }
+        $result = $barangModel->update($id, $nama_barang, $stok, $status);
+        
+        $_SESSION['notification'] = [
+            'type' => $result['success'] ? 'success' : 'error',
+            'message' => $result['message']
+        ];
         header('Location: /admin/barang.php');
         exit();
 
     } elseif ($action === 'hapus') {
-        $id = $_POST['id'];
+        $id = (int) $_POST['id'];
         $nama_barang = $_POST['nama_barang'] ?? 'Barang';
         
-        if (delete_barang($pdo, $id)) {
+        $result = $barangModel->delete($id);
+        
+        if ($result['success']) {
             $_SESSION['notification'] = [
                 'type' => 'warning',
                 'message' => 'Barang "' . htmlspecialchars($nama_barang) . '" berhasil dihapus!'
@@ -67,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['notification'] = [
                 'type' => 'error',
-                'message' => 'Gagal menghapus barang. Silakan coba lagi.'
+                'message' => $result['message']
             ];
         }
         header('Location: /admin/barang.php');
@@ -75,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$barang = get_all_barang($pdo);
+$barang = $barangModel->getAll();
 
 $content = __DIR__ . '/../../views/admin/barang/barang_content.php';
 require __DIR__ . '/../../views/layouts/main.php';

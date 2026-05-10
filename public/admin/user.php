@@ -1,17 +1,12 @@
 <?php
-
 session_start();
-require_once __DIR__.'/../../config/connection.php';
-require_once __DIR__.'/../../src/actions.php';
-require_once __DIR__.'/../../src/core.php';
-require_once __DIR__.'/../../src/auth.php';
+require_once __DIR__ . '/../../src/classes/User.php';
+require_once __DIR__ . '/../../src/classes/Auth.php';
 
-if (! is_logged_in() || ! is_admin()) {
-    header('Location: /login.php');
-    exit();
-}
+$auth = new Auth();
+$auth->requireAdmin();
 
-$pdo = get_db();
+$user = new User();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -41,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Password minimal 6 karakter';
         }
 
-        if (! empty($errors)) {
+        if (!empty($errors)) {
             $_SESSION['notification'] = [
                 'type' => 'error',
                 'message' => implode('<br>', $errors),
@@ -52,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
 
-        // Panggil fungsi dengan cek duplikat
-        $result = save_user($pdo, $nis, $nama, $kelas, $hashedPassword, $role);
+        // Panggil method dengan cek duplikat
+        $result = $user->save($nis, $nama, $kelas, $hashedPassword, $role);
 
         $_SESSION['notification'] = [
             'type' => $result['success'] ? 'success' : 'error',
@@ -64,9 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
 
     } elseif ($action === 'edit') {
-        $id = $_POST['id'];
-        $nama = trim($_POST['nama']);
+        $id = (int) $_POST['id'];
         $nis = trim($_POST['nis']);
+        $nama = trim($_POST['nama']);
         $kelas = trim($_POST['kelas']);
         $role = $_POST['role'];
         $password = $_POST['password'] ?? '';
@@ -83,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Kelas harus diisi';
         }
 
-        if (! empty($errors)) {
+        if (!empty($errors)) {
             $_SESSION['notification'] = [
                 'type' => 'error',
                 'message' => implode('<br>', $errors),
@@ -92,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        $result = update_user($pdo, $id, $nama, $nis, $kelas, $password, $role);
+        $result = $user->update($id, $nis, $nama, $kelas, $password, $role);
 
         $_SESSION['notification'] = [
             'type' => $result['success'] ? 'success' : 'error',
@@ -103,15 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
 
     } elseif ($action === 'hapus') {
-        $id = $_POST['id'];
+        $id = (int) $_POST['id'];
         $nama = $_POST['nama'] ?? 'user';
 
-        $result = delete_user($pdo, $id);
+        $result = $user->delete($id);
 
         $_SESSION['notification'] = [
             'type' => $result['success'] ? 'warning' : 'error',
             'message' => $result['success']
-                ? 'User "'.htmlspecialchars($nama).'" berhasil dihapus!'
+                ? 'User "' . htmlspecialchars($nama) . '" berhasil dihapus!'
                 : $result['message'],
         ];
 
@@ -120,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$users = get_all_users($pdo);
+$users = $user->getAll();
 
-$content = __DIR__.'/../../views/admin/user/user_content.php';
-require __DIR__.'/../../views/layouts/main.php';
-
+$content = __DIR__ . '/../../views/admin/user/user_content.php';
+require __DIR__ . '/../../views/layouts/main.php';
+?>

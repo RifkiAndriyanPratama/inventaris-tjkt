@@ -114,14 +114,14 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead class="bg-neutral-secondary-soft">
-                    实践
+                    <tr>
                         <th class="px-6 py-3 text-xs font-medium text-body/70">No</th>
                         <th class="px-6 py-3 text-xs font-medium text-body/70">Barang</th>
                         <th class="px-6 py-3 text-xs font-medium text-body/70">Jumlah</th>
                         <th class="px-6 py-3 text-xs font-medium text-body/70">Tgl Pinjam</th>
                         <th class="px-6 py-3 text-xs font-medium text-body/70">Tgl Kembali</th>
                         <th class="px-6 py-3 text-xs font-medium text-body/70">Status</th>
-                     \\
+                     </tr>
                 </thead>
                 <tbody class="divide-y divide-default">
                     <?php if (empty($riwayat)) { ?>

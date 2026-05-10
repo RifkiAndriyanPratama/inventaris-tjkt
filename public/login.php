@@ -1,12 +1,8 @@
 <?php
-
 session_start();
+require_once __DIR__ . '/../src/classes/Auth.php';
 
-require_once '../config/connection.php';
-require_once '../src/core.php';
-require_once '../src/auth.php';
-
-$pdo = get_db();
+$auth = new Auth();
 $error = '';
 $success = '';
 
@@ -17,17 +13,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($nama) || empty($password)) {
         $error = 'Nama dan password harus diisi!';
     } else {
-        $result = login($pdo, $nama, $password);
+        $result = $auth->login($nama, $password);
 
         if ($result['success']) {
-            $_SESSION['user'] = $result['user'];
             $_SESSION['notification'] = [
                 'type' => 'success',
-                'message' => 'Login berhasil! Selamat datang '.$result['user']['nama'],
+                'message' => 'Login berhasil! Selamat datang ' . htmlspecialchars($nama),
             ];
 
             // Redirect berdasarkan role
-            if ($result['user']['role'] === 'admin') {
+            if ($result['role'] === 'admin') {
                 header('Location: /admin/dashboard.php');
             } else {
                 header('Location: /user/dashboard.php');
@@ -41,3 +36,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $content = '../views/auth/login.php';
 require '../views/layouts/auth.php';
+?>

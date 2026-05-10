@@ -1,26 +1,22 @@
 <?php
 session_start();
-require_once __DIR__.'/../../config/connection.php';
-require_once __DIR__.'/../../src/actions.php';
-require_once __DIR__.'/../../src/core.php';
-require_once __DIR__.'/../../src/auth.php';
+require_once __DIR__ . '/../../src/classes/Peminjaman.php';
+require_once __DIR__ . '/../../src/classes/Auth.php';
 
-if (!is_logged_in() || !is_admin()) {
-    header('Location: /login.php');
-    exit();
-}
+$auth = new Auth();
+$auth->requireAdmin();
 
-$pdo = get_db();
+$peminjamanModel = new Peminjaman(); 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'tambah') {
-        $id_user = $_POST['id_user'];
-        $id_barang = $_POST['id_barang'];
-        $jumlah = $_POST['jumlah'];
+        $id_user = (int) $_POST['id_user'];
+        $id_barang = (int) $_POST['id_barang'];
+        $jumlah = (int) $_POST['jumlah'];
         
-        $result = save_peminjaman($pdo, $id_user, $id_barang, $jumlah);
+        $result = $peminjamanModel->save($id_user, $id_barang, $jumlah);
         
         $_SESSION['notification'] = [
             'type' => $result['success'] ? 'success' : 'error',
@@ -31,10 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
         
     } elseif ($action === 'edit') {
-        $id = $_POST['id'];
-        $jumlah = $_POST['jumlah'];
+        $id = (int) $_POST['id'];
+        $jumlah = (int) $_POST['jumlah'];
         
-        $result = update_peminjaman($pdo, $id, $jumlah);
+        $result = $peminjamanModel->update($id, $jumlah);
         
         $_SESSION['notification'] = [
             'type' => $result['success'] ? 'success' : 'error',
@@ -45,10 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
         
     } elseif ($action === 'hapus') {
-        $id = $_POST['id'];
+        $id = (int) $_POST['id'];
         $nama_barang = $_POST['nama_barang'] ?? 'peminjaman';
         
-        $result = delete_peminjaman($pdo, $id);
+        $result = $peminjamanModel->delete($id);
         
         $_SESSION['notification'] = [
             'type' => $result['success'] ? 'warning' : 'error',
@@ -61,40 +57,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
         
     } elseif ($action === 'approve') {
-        $id = $_POST['id'];
-        $result = update_status_peminjaman($pdo, $id, 'dipinjam');
+        $id = (int) $_POST['id'];
+        $result = $peminjamanModel->updateStatus($id, 'dipinjam');
         
-        // return JSON
+        // return JSON untuk AJAX
         header('Content-Type: application/json');
         echo json_encode($result);
         exit();
         
     } elseif ($action === 'tolak') {
-        $id = $_POST['id'];
-        $result = update_status_peminjaman($pdo, $id, 'ditolak');
+        $id = (int) $_POST['id'];
+        $result = $peminjamanModel->updateStatus($id, 'ditolak');
         
-        // return JSON
+        // return JSON untuk AJAX
         header('Content-Type: application/json');
         echo json_encode($result);
         exit();
         
     } elseif ($action === 'kembali') {
-        $id = $_POST['id'];
+        $id = (int) $_POST['id'];
         
         // Ambil jumlah dari database
-        $stmt = $pdo->prepare('SELECT jumlah FROM peminjaman WHERE id = :id');
-        $stmt->execute([':id' => $id]);
-        $jumlah = $stmt->fetchColumn();
+        $data = $peminjamanModel->getById($id);
+        $jumlah = $data['jumlah'] ?? 0;
         
-        $result = kembalikan_barang($pdo, $id, $jumlah);
+        $result = $peminjamanModel->kembalikan($id, $jumlah);
         
-        // return JSON
+        // return JSON untuk AJAX
         header('Content-Type: application/json');
         echo json_encode($result);
         exit();
     }
 }
 
-$peminjaman = get_all_peminjaman($pdo);
+$peminjaman = $peminjamanModel->getAll(); 
+
 $content = __DIR__ . '/../../views/admin/peminjaman/peminjaman_content.php';
 require __DIR__ . '/../../views/layouts/main.php';
+?>
