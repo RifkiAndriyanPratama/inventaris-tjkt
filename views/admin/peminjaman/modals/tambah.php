@@ -31,8 +31,10 @@
                 <select name="id_user" required class="w-full border border-default rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-brand/20 focus:border-brand transition">
                     <option value="">-- Pilih Peminjam --</option>
                     <?php
-                    // Ambil data users dari database
-                    $users = get_all_users($pdo);
+                    // OOP: Ambil data users dari database
+                    require_once __DIR__ . '/../../../../src/classes/User.php';
+                    $userModel = new User();
+                    $users = $userModel->getAll();
                     foreach ($users as $user) {
                         echo '<option value="' . $user['id'] . '">' . htmlspecialchars($user['nama']) . ' - ' . htmlspecialchars($user['kelas']) . '</option>';
                     }
@@ -46,9 +48,11 @@
                 <select name="id_barang" id="selectBarang" required class="w-full border border-default rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-brand/20 focus:border-brand transition">
                     <option value="">-- Pilih Barang --</option>
                     <?php
-                    // Ambil data barang dari database
-                    $barang = get_all_barang($pdo);
-                    foreach ($barang as $b) {
+                    // OOP: Ambil data barang dari database
+                    require_once __DIR__ . '/../../../../src/classes/Barang.php';
+                    $barangModel = new Barang();
+                    $barangList = $barangModel->getAll();
+                    foreach ($barangList as $b) {
                         $disabled = ($b['stok'] <= 0) ? 'disabled' : '';
                         echo '<option value="' . $b['id'] . '" data-stok="' . $b['stok'] . '" ' . $disabled . '>' 
                             . htmlspecialchars($b['nama_barang']) . ' (Stok: ' . $b['stok'] . ')' 

@@ -1,5 +1,5 @@
 <div id="edit" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('modal-edit')"></div>
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('edit')"></div>
     <div class="relative bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl transform transition-all">
         <!-- Header -->
         <div class="flex items-center justify-between p-6 border-b border-default">
