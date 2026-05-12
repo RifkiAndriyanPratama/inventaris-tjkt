@@ -8,6 +8,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DB}
     volumes:
       - .data:/var/lib/mysql
+      - ./inventaris.sql:/docker-entrypoint-initdb.d/inventaris.sql
     ports:
       - "3306:3306"
 
